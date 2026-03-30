@@ -2,6 +2,8 @@ services:
   - type: web
     name: google-calendar-combined
     runtime: node
+    nodeVersion: "20"
+    plan: free
     buildCommand: npm install && cd client && npm install && npm run build
     startCommand: node server.js
     envVars:
@@ -12,4 +14,6 @@ services:
       - key: GOOGLE_CLIENT_SECRET
         sync: false
       - key: SESSION_SECRET
+        sync: false
+      - key: BASE_URL
         sync: false
