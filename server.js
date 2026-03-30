@@ -1,6 +1,6 @@
 require('dotenv').config();
 const express = require('express');
-const session = require('express-session');
+const cookieSession = require('cookie-session');
 const cors = require('cors');
 const { google } = require('googleapis');
 const path = require('path');
@@ -14,15 +14,13 @@ const FRONTEND_URL = isProduction ? BASE_URL : 'http://localhost:5173';
 app.set('trust proxy', 1);
 app.use(cors({ origin: FRONTEND_URL, credentials: true }));
 app.use(express.json());
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'dev-secret-change-me',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: isProduction,
-    sameSite: isProduction ? 'none' : 'lax',
-    maxAge: 24 * 60 * 60 * 1000,
-  },
+app.use(cookieSession({
+  name: 'gcal_session',
+  keys: [process.env.SESSION_SECRET || 'dev-secret-change-me'],
+  maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+  secure: isProduction,
+  sameSite: isProduction ? 'none' : 'lax',
+  httpOnly: true,
 }));
 
 // Full calendar access (read + write) so we can edit/move events
@@ -90,7 +88,16 @@ app.get('/auth/callback', async (req, res) => {
     const email = userInfo.data.email;
 
     const slot = req.session.authSlot || 0;
-    req.session.accounts[slot] = { email, tokens };
+    // Store only essential token fields to stay within cookie size limits
+    req.session.accounts[slot] = {
+      email,
+      tokens: {
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
+        expiry_date: tokens.expiry_date,
+        token_type: tokens.token_type,
+      },
+    };
 
     res.redirect(FRONTEND_URL + '?auth=success&slot=' + slot);
   } catch (err) {
