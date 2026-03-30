@@ -17,6 +17,7 @@ export default function DayView({ currentDate, events, onEventClick, onEventDrop
   const dayStr = currentDate.toISOString().split('T')[0];
   const [dragEvent, setDragEvent] = useState(null);
   const [dragGhostPos, setDragGhostPos] = useState(null);
+  const [now, setNow] = useState(new Date());
   const dragStartY = useRef(0);
   const dragStartTime = useRef(null);
 
@@ -36,7 +37,12 @@ export default function DayView({ currentDate, events, onEventClick, onEventDrop
     if (gridRef.current) gridRef.current.scrollTop = 8 * 48;
   }, []);
 
-  const now = new Date();
+  // Update current time every 30 seconds
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(timer);
+  }, []);
+
   const nowTop = (now.getHours() * 60 + now.getMinutes()) / 60 * 48;
 
   const handleDragStart = useCallback((e, event) => {

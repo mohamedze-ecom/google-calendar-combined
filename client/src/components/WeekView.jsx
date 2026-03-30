@@ -40,6 +40,7 @@ export default function WeekView({ currentDate, events, onEventClick, onEventDro
   const today = new Date();
   const [dragEvent, setDragEvent] = useState(null);
   const [dragGhostPos, setDragGhostPos] = useState(null);
+  const [now, setNow] = useState(new Date());
   const dragStartY = useRef(0);
   const dragStartTime = useRef(null);
 
@@ -57,6 +58,12 @@ export default function WeekView({ currentDate, events, onEventClick, onEventDro
     if (gridRef.current) gridRef.current.scrollTop = 8 * 48;
   }, []);
 
+  // Update current time every 30 seconds
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(timer);
+  }, []);
+
   const isToday = (date) =>
     date.getFullYear() === today.getFullYear() &&
     date.getMonth() === today.getMonth() &&
@@ -70,7 +77,6 @@ export default function WeekView({ currentDate, events, onEventClick, onEventDro
     return eventsList.filter(e => e.start.split('T')[0] === dayStr);
   };
 
-  const now = new Date();
   const nowTop = (now.getHours() * 60 + now.getMinutes()) / 60 * 48;
 
   const handleDragStart = useCallback((e, event) => {
